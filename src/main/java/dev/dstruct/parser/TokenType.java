@@ -1,0 +1,12 @@
+package dev.dstruct.parser;
+
+public enum TokenType {
+	TEXT,
+	BOOLEAN_TYPE,
+	INTEGER_TYPE,
+	STRING_TYPE,
+	DOUBLE_TYPE,
+	ENDLINE,
+	OPEN_PARENTHESIS,
+	CLOSE_PARENTHESIS
+}
