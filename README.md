@@ -97,3 +97,22 @@ VGET mykey
 CAST : VGET mykey <- cast operation ( explicit form ) 
 42
 ```
+
+## Quick start
+
+```bash
+docker build . -t dstruct
+docker run -d -p 4242:4242 dstruct
+
+telnet localhost 4242
+Trying ::1...
+telnet: connect to address ::1: Connection refused
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+VSET marameo marameo
+OK
+VGET marameo
+marameo
+```
+
