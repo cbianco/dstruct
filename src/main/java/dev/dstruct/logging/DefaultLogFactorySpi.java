@@ -1,8 +1,8 @@
 package dev.dstruct.logging;
 
 import dev.dstruct.util.Config;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -123,7 +123,7 @@ class DefaultLogFactorySpi implements LogFactorySpi {
 			}
 
 			private void print(String level, Throwable throwable) {
-				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				StringWriter out = new StringWriter();
 				try (PrintWriter printWriter = new PrintWriter(out)) {
 					throwable.printStackTrace(printWriter);
 				}
