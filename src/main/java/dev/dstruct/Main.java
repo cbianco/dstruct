@@ -1,6 +1,5 @@
 package dev.dstruct;
 
-import dev.dstruct.DStruct.Options;
 import dev.dstruct.wal.SyncPolicy;
 
 public class Main {

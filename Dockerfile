@@ -1,14 +1,15 @@
+ARG MAVEN_PROFILE="default"
 # Build stage: compile the application
 FROM maven:3.9-eclipse-temurin-25 AS build
+ARG MAVEN_PROFILE
 WORKDIR /build
-
 # Copy pom.xml first to leverage Docker layer caching
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -P ${MAVEN_PROFILE} -B
 
 # Copy source code and build
 COPY src ./src
-RUN mvn package -DskipTests -B
+RUN mvn package -DskipTests -P ${MAVEN_PROFILE} -B
 
 # Runtime stage: minimal JRE image
 FROM eclipse-temurin:25-jre-alpine

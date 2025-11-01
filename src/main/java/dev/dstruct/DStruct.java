@@ -3,12 +3,11 @@ package dev.dstruct;
 import dev.dstruct.Result.Error;
 import dev.dstruct.command.Command;
 import dev.dstruct.inmemory.InMemoryStore;
+import dev.dstruct.logging.Log;
+import dev.dstruct.logging.LogFactory;
 import dev.dstruct.util.Process;
 import dev.dstruct.util.Sink;
-import dev.dstruct.wal.SyncPolicy;
 import dev.dstruct.wal.WALStore;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
@@ -25,6 +24,8 @@ import java.util.concurrent.TimeUnit;
  * then the server is started.
  */
 public class DStruct {
+
+	private static final Log log = LogFactory.create(DStruct.class);
 
 	private final EventLoop eventLoop;
 	private final Process tcpServer;
@@ -46,25 +47,6 @@ public class DStruct {
 			options.batchSize,
 			options.syncIntervalMs
 		);
-	}
-
-	public static class Options {
-		int tcpPort = 4242;
-		String eventLoopThreadName = "dstruct-event-loop";
-		boolean writeAHeadLogging = true;
-		String dataDirectory;
-		SyncPolicy syncPolicy = SyncPolicy.BATCHED;
-		int batchSize = 100;
-		long syncIntervalMs = 1000;
-
-		Path getDataDirectory() {
-			if (dataDirectory != null) {
-				return Paths.get(dataDirectory);
-			}
-			String home = System.getProperty("user.home");
-			return Paths.get(home, ".dstruct", "data");
-		}
-
 	}
 
 	public void execute(Command command) {
@@ -100,7 +82,7 @@ public class DStruct {
 			return inMemoryStore.manageCommand(command);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			log.error(e);
 			return new Error(e.getMessage());
 		}
 	}
@@ -110,7 +92,7 @@ public class DStruct {
 		eventLoop.start();
 		walStore.start(dsCommand -> onCommand(dsCommand, true));
 		tcpServer.start();
-		System.out.println("Server started in: " + Duration.between(now, Instant.now()));
+		log.info("Server started in: " + Duration.between(now, Instant.now()));
 	}
 
 	public void stop() {
@@ -120,7 +102,7 @@ public class DStruct {
 			var a3 = walStore
 		) {}
 		catch (Exception e) {
-			e.printStackTrace();
+			log.error(e);
 		}
 	}
 

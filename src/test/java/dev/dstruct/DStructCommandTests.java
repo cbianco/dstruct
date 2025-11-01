@@ -51,7 +51,7 @@ public class DStructCommandTests {
 
         @BeforeEach
         void setUp() throws Exception {
-            DStruct.Options options = new DStruct.Options();
+            Options options = new Options();
             options.tcpPort = 0; // Disable TCP server
             options.writeAHeadLogging = false;
             options.dataDirectory = tempDir.resolve("dstruct-test-" + System.currentTimeMillis()).toString();
@@ -578,7 +578,7 @@ public class DStructCommandTests {
         void setUp() {
             port = 14242; // Use a different port for tests
             
-            DStruct.Options options = new DStruct.Options();
+            Options options = new Options();
             options.tcpPort = port;
             options.writeAHeadLogging = false;
 	        options.dataDirectory = tempDir.resolve("dstruct-test-" + System.currentTimeMillis()).toString();
@@ -841,7 +841,7 @@ public class DStructCommandTests {
         void setUp() throws Exception {
             port = 14343;
 
-            DStruct.Options options = new DStruct.Options();
+            Options options = new Options();
             options.tcpPort = port;
             options.writeAHeadLogging = false;
 	        options.dataDirectory = tempDir.resolve("dstruct-test-" + System.currentTimeMillis()).toString();

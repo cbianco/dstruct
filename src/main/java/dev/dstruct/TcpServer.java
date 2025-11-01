@@ -6,6 +6,8 @@ import dev.dstruct.Result.Ok;
 import dev.dstruct.Result.Results;
 import dev.dstruct.command.Command;
 import dev.dstruct.command.Command.Batch;
+import dev.dstruct.logging.Log;
+import dev.dstruct.logging.LogFactory;
 import dev.dstruct.parser.ParseException;
 import dev.dstruct.parser.Parser;
 import dev.dstruct.parser.Scanner;
@@ -36,6 +38,8 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public class TcpServer implements Process {
+
+	private static final Log log = LogFactory.create(TcpServer.class);
 
 	private final int port;
 	private Selector selector;
@@ -98,7 +102,7 @@ public class TcpServer implements Process {
 			this.serverChannel.configureBlocking(false);
 			this.serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-			System.out.println("Server started at port: " + port);
+			log.info("Server started at port: " + port);
 
 			while (serverChannel.isOpen() && selector.isOpen()) {
 				processPendingResponses();
