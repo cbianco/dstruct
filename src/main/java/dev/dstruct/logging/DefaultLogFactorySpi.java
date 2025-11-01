@@ -1,5 +1,6 @@
 package dev.dstruct.logging;
 
+import dev.dstruct.util.Config;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.time.OffsetDateTime;
@@ -16,8 +17,8 @@ class DefaultLogFactorySpi implements LogFactorySpi {
 	private final DateTimeFormatter formatter;
 
 	DefaultLogFactorySpi() {
-		String level = System.getProperty("dstruct.log.level", "INFO");
-		String pattern = System.getProperty("dstruct.log.date.format", "yyyy-MM-dd HH:mm:ss.SSSXXX");
+		String level = Config.resolve("dstruct.log.level", "INFO");
+		String pattern = Config.resolve("dstruct.log.date.format", "yyyy-MM-dd HH:mm:ss.SSSXXX");
 		this.minLevel = LogLevel.valueOf(level.toUpperCase());
 		this.formatter =
 			DateTimeFormatter
@@ -28,6 +29,8 @@ class DefaultLogFactorySpi implements LogFactorySpi {
 	@Override
 	public Log create(Class<?> clazz) {
 		return new Log() {
+
+			static final String LOG_TEMPLATE = "%-5s [%s][%s][%s] %s\n";
 
 			static final String INFO = "INFO";
 			static final String WARN = "WARN";
@@ -124,43 +127,23 @@ class DefaultLogFactorySpi implements LogFactorySpi {
 				try (PrintWriter printWriter = new PrintWriter(out)) {
 					throwable.printStackTrace(printWriter);
 				}
-
-				Thread thread = Thread.currentThread();
-				OffsetDateTime now = OffsetDateTime.now();
-				System.out.printf(
-					"%s [%s][%s][%s] %s\n",
-					level,
-					formatter.format(now),
-					thread.getName(),
-					clazz.getSimpleName(),
-					out.toString().strip()
-				);
+				print(level, out.toString().strip());
 			}
 
+			private void printf(String level, String message, Object...args) {
+				print(level, String.format(message, args));
+			}
 
 			private void print(String level, String message) {
 				Thread thread = Thread.currentThread();
 				OffsetDateTime now = OffsetDateTime.now();
 				System.out.printf(
-					"%s [%s][%s][%s] %s\n",
+					LOG_TEMPLATE,
 					level,
 					formatter.format(now),
 					thread.getName(),
 					clazz.getSimpleName(),
 					message
-				);
-			}
-
-			private void printf(String level, String message, Object...args) {
-				Thread thread = Thread.currentThread();
-				OffsetDateTime now = OffsetDateTime.now();
-				System.out.printf(
-					"%s [%s][%s][%s] %s\n",
-					level,
-					formatter.format(now),
-					thread.getName(),
-					clazz.getSimpleName(),
-					String.format(message, args)
 				);
 			}
 

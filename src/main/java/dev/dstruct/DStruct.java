@@ -40,7 +40,7 @@ public class DStruct {
 	public DStruct(Options options) {
 		this.options = options;
 		this.eventLoop = new EventLoop(options.eventLoopThreadName);
-		this.tcpServer = options.tcpPort == 0 ? Process.NOOP : new TcpServer(options.tcpPort, this::executeAsync);
+		this.tcpServer = options.port == 0 ? Process.NOOP : new TcpServer(options.port, this::executeAsync);
 		this.walStore = new WALStore(
 			options.getDataDirectory(),
 			options.syncPolicy,
