@@ -25,5 +25,8 @@ COPY --from=build /build/target/dstruct-*.jar dstruct.jar
 # Document the exposed port
 EXPOSE 4242
 
+ENV DSTRUCT_WAL_ENABLED="false"
+ENV DSTRUCT_LOG_LEVEL="DEBUG"
+
 # Run the application
 CMD ["java", "-cp", "dstruct.jar", "dev.dstruct.Main"]
