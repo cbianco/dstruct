@@ -92,10 +92,12 @@ public class Parser {
 		if (isTypeToken()) {
 			Token typeToken = advance();
 			consume(TokenType.OPEN_PARENTHESIS);
+			consumeAll(TokenType.OPEN_PARENTHESIS);
 			tokens.addFirst(typeToken);
 			tokens.addFirst(new Token(TokenType.TEXT, "Cast"));
 			commands.add(command());
 			consume(TokenType.CLOSE_PARENTHESIS);
+			consumeAll(TokenType.CLOSE_PARENTHESIS);
 		}
 		else {
 			commands.add(command());
@@ -326,13 +328,11 @@ public class Parser {
 	private byte[] booleanType() {
 		if (!match(TokenType.TEXT)) throw new ParseException("parse error");
 		Token current = advance();
-		if (current.text().equals("t")) {
-			return Binaries.toBytes(true);
-		}
-		else if (current.text().equals("f")) {
-			return Binaries.toBytes(false);
-		}
-		throw new ParseException("parse error");
+		return switch (current.text()) {
+			case "t", "1" -> Binaries.toBytes(true);
+			case "f", "0" -> Binaries.toBytes(false);
+			default -> throw new ParseException("parse error");
+		};
 	}
 
 	private boolean isAtEnd() {

@@ -9,14 +9,15 @@ import java.util.List;
 public class Scanner {
 
 	private final ReadableByteChannel read;
-	private final ByteBuffer byteBuffer = ByteBuffer.allocate(8196).flip();
-	private int size = Integer.MIN_VALUE;
+	private final ByteBuffer byteBuffer;
 	private byte current = '\0';
 	private final List<Token> tokens = new ArrayList<>();
-	private boolean parenthesisOpen = false;
+	private int parenthesisCount = 0;
+	private boolean endOfStream = false;
 
 	public Scanner(ReadableByteChannel read) {
 		this.read = read;
+		this.byteBuffer = ByteBuffer.allocate(8196).flip();
 	}
 
 	static final byte BOOLEAN_CHAR = '#';
@@ -26,20 +27,20 @@ public class Scanner {
 
 	public void parse() {
 		while (!isAtEnd()) {
+			skipSpaces();
 			this.current = advance();
+			if (current == '\0') break;
+
 			if (current == '(') {
-				parenthesisOpen = true;
+				parenthesisCount++;
 				tokens.add(new Token(TokenType.OPEN_PARENTHESIS, null));
 			}
 			else if (current == ')') {
-				parenthesisOpen = false;
+				parenthesisCount--;
 				tokens.add(new Token(TokenType.CLOSE_PARENTHESIS, null));
 			}
 			else if (current == '\r' || current == '\n') {
 				tokens.add(new Token(TokenType.ENDLINE, null));
-				continue;
-			}
-			if (Character.isWhitespace((char)this.current)) {
 				continue;
 			}
 			if (isTypeChar(this.current)) {
@@ -55,10 +56,22 @@ public class Scanner {
 				text();
 			}
 		}
+
+		if (parenthesisCount > 0) {
+			throw new ParseException("missing closing parenthesis");
+		}
+		else if (parenthesisCount < 0) {
+			throw new ParseException("too much closing parenthesis");
+		}
+
 	}
 
 	public List<Token> getTokens() {
 		return tokens;
+	}
+
+	private void skipSpaces() {
+		while (!isAtEnd() && isSpace(peek())) advance();
 	}
 
 	private void text() {
@@ -80,7 +93,7 @@ public class Scanner {
 					break;
 				}
 			}
-			else if (parenthesisOpen && c == ')') {
+			else if (parenthesisCount > 0 && c == ')') {
 				closeParenthesis = true;
 				break;
 			}
@@ -95,9 +108,9 @@ public class Scanner {
 			throw new ParseException("missing closing quote: " + quote);
 		}
 		tokens.add(new Token(TokenType.TEXT, sb.toString()));
-		if (parenthesisOpen && closeParenthesis) {
+		if (parenthesisCount > 0 && closeParenthesis) {
 			tokens.add(new Token(TokenType.CLOSE_PARENTHESIS, null));
-			parenthesisOpen = false;
+			parenthesisCount--;
 		}
 	}
 
@@ -117,28 +130,51 @@ public class Scanner {
 	}
 
 	private boolean isAtEnd() {
-		if (size == Integer.MIN_VALUE) {
-			return false;
-		}
-		return !byteBuffer.hasRemaining() && (size == -1 || size == 0);
+		return !ensureBuffer();
 	}
 
 	private byte advance() {
+		if (isAtEnd()) {
+			return '\0';
+		}
+		return byteBuffer.get();
+	}
+
+	private byte peek() {
+		if (isAtEnd()) {
+			return '\0';
+		}
+		return byteBuffer.get(byteBuffer.position());
+	}
+
+	private boolean ensureBuffer() {
+		if (byteBuffer.hasRemaining()) {
+			return true;
+		}
+
+		if (endOfStream) {
+			return false;
+		}
+
 		try {
-			if (isAtEnd())
-				return '\0';
-			if (!byteBuffer.hasRemaining()) {
-				byteBuffer.clear();
-				this.size = read.read(byteBuffer);
-				byteBuffer.flip();
-				if (isAtEnd())
-					return '\0';
+			byteBuffer.clear();
+			int bytesRead = read.read(byteBuffer);
+			byteBuffer.flip();
+
+			if (bytesRead == -1 || bytesRead == 0) {
+				endOfStream = true;
+				return false;
 			}
-			return byteBuffer.get();
+
+			return byteBuffer.hasRemaining();
 		}
 		catch (IOException ioe) {
 			throw new ParseException(ioe.getMessage());
 		}
+	}
+
+	private boolean isSpace(byte b) {
+		return Character.isSpaceChar((char)b) || b == '\t';
 	}
 
 }
